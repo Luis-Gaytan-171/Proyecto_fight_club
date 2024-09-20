@@ -1,5 +1,3 @@
-Luis Gaytan Garcia A01771191
-
 Simulador de peleas
 
 Descripcion:
