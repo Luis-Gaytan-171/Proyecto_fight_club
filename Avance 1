@@ -23,7 +23,7 @@ Bucle principal del combate:
 
 Mientras ambos personajes tengan puntos de vida:
 Determinar qué personaje tiene el turno.
-Mostrar información sobre el estado actual de ambos personajes (nombre, atributos)
+Mostrar y guardar en listas o matrices la información sobre el estado actual de ambos personajes (nombre, atributos)
 Pedir al jugador que seleccione una acción (atacar, usar habilidad, usar objeto, etc.).
 Ejecutar la acción seleccionada:
 Atacar: Calcular el daño basado en la fuerza del atacante y la defensa del defensor. Restar el daño a los puntos de vida del defensor.
