@@ -1,210 +1,129 @@
-# Simulador de Combate en Python
-# Este programa simula un combate por turnos entre dos personajes usando variables, condicionales y ciclos.
-# Los personajes pueden atacar y usar habilidades, y se calcula el daño o el efecto en función de sus atributos.
+# ====================== Funciones principales =========================
 
-import random
-
-"""
-================== Funciones principales del simulador de combate ====================
-"""
-
-def crear_personaje(nombre, fuerza, defensa, vida, habilidades):
+def calcular_dano(atacante_fuerza, defensor_defensa):
     """
-    Crea un personaje con los atributos especificados.
-    recibe: 
-        - nombre (cadena)
-        - fuerza (entero)
-        - defensa (entero)
-        - vida (entero)
-        - habilidades (matriz de enteros)
-    devuelve: diccionario con los atributos del personaje.
+    Calcula el daño infligido en función de la fuerza del atacante y la defensa del defensor.
+    Daño mínimo es 1.
     """
-    return {
-        "nombre": nombre,
-        "fuerza": fuerza,
-        "defensa": defensa,
-        "vida": vida,
-        "habilidades": habilidades
-    }
+    dano = atacante_fuerza - defensor_defensa
+    if dano < 1:
+        dano = 1  # Daño mínimo de 1
+    return dano
 
-def calcular_dano(fuerza_atacante, defensa_defensor):
+def aplicar_dano(vida_actual, dano_recibido):
     """
-    Calcula el daño infligido por un personaje al otro.
-    recibe: 
-        - fuerza_atacante (entero)
-        - defensa_defensor (entero)
-    devuelve: daño total (entero)
+    Resta el daño recibido a los puntos de vida del personaje.
     """
-    return max(0, fuerza_atacante - defensa_defensor)  # El daño mínimo es 0
+    vida_actual -= dano_recibido
+    if vida_actual < 0:
+        vida_actual = 0  # La vida no puede ser negativa
+    return vida_actual
 
-def atacar(atacante, defensor):
+def mostrar_estado(personaje, vida, fuerza, defensa):
     """
-    Realiza un ataque del atacante al defensor y reduce la vida del defensor.
-    recibe:
-        - atacante (diccionario del personaje atacante)
-        - defensor (diccionario del personaje defensor)
+    Muestra el estado actual del personaje: nombre, vida, fuerza, defensa.
     """
-    dano = calcular_dano(atacante["fuerza"], defensor["defensa"])
-    defensor["vida"] -= dano
-    print(f"{atacante['nombre']} atacó a {defensor['nombre']} infligiendo {dano} puntos de daño.")
-    print(f"Vida restante de {defensor['nombre']}: {defensor['vida']}")
+    print(f"{personaje}: Vida = {vida}, Fuerza = {fuerza}, Defensa = {defensa}")
 
-def usar_habilidad(usuario, objetivo, indice_habilidad):
+def turno_combate(personaje_atacante, personaje_defensor, fuerza_atacante, defensa_defensor, vida_defensor):
     """
-    Usa una habilidad del usuario sobre un objetivo.
-    recibe:
-        - usuario (diccionario del personaje que usa la habilidad)
-        - objetivo (diccionario del personaje objetivo)
-        - indice_habilidad (entero, índice de la habilidad en la lista de habilidades)
+    Ejecuta un turno de combate en el que el atacante inflige daño al defensor.
     """
-    tipo_habilidad, valor_habilidad = usuario["habilidades"][indice_habilidad]
-    
-    if tipo_habilidad == 0:  # Daño
-        dano = max(0, valor_habilidad - objetivo["defensa"])
-        objetivo["vida"] -= dano
-        print(f"{usuario['nombre']} usó una habilidad de daño sobre {objetivo['nombre']} infligiendo {dano} puntos de daño.")
-    elif tipo_habilidad == 1:  # Curación
-        usuario["vida"] += valor_habilidad
-        print(f"{usuario['nombre']} usó una habilidad de curación y restauró {valor_habilidad} puntos de vida.")
-    elif tipo_habilidad == 2:  # Defensa
-        usuario["defensa"] += valor_habilidad
-        print(f"{usuario['nombre']} usó una habilidad de defensa, incrementando su defensa en {valor_habilidad} puntos.")
+    print(f"\nTurno de {personaje_atacante} atacando a {personaje_defensor}")
+    dano = calcular_dano(fuerza_atacante, defensa_defensor)
+    vida_defensor = aplicar_dano(vida_defensor, dano)
+    print(f"{personaje_defensor} recibe {dano} puntos de daño.")
+    return vida_defensor
 
-    print(f"Estado actual de {usuario['nombre']} - Vida: {usuario['vida']}, Defensa: {usuario['defensa']}")
-
-"""
-================== Función menú principal ====================
-"""
-
-def menu(jugador, enemigo):
+def guardar_estado_personajes(estado_combate):
     """
-    Función que muestra las opciones de acción del jugador y permite elegir una.
-    recibe:
-        - jugador (diccionario del personaje jugador)
-        - enemigo (diccionario del personaje enemigo)
+    Guarda el estado final de los personajes en un archivo de texto llamado 'estado_personajes.txt'.
     """
-    print(f"\nTurno de {jugador['nombre']}. ¿Qué quieres hacer?")
-    print("1. Atacar")
-    print("2. Usar habilidad")
+    with open("estado_personajes.txt", "a") as archivo:
+        archivo.write(estado_combate + "\n")
 
-    opcion = input("Selecciona una opción (1 o 2): ")
-
-    if opcion == "1":
-        atacar(jugador, enemigo)
-    elif opcion == "2":
-        print("\nSelecciona la habilidad que deseas usar:")
-        for i, habilidad in enumerate(jugador["habilidades"]):
-            print(f"{i + 1}. Tipo: {['Daño', 'Curación', 'Defensa'][habilidad[0]]}, Valor: {habilidad[1]}")
-
-        indice_habilidad = int(input("Ingresa el número de la habilidad que deseas usar: ")) - 1
-        if 0 <= indice_habilidad < len(jugador["habilidades"]):
-            usar_habilidad(jugador, enemigo, indice_habilidad)
-        else:
-            print("Selección de habilidad inválida. Turno perdido.")
-    else:
-        print("Selección de acción inválida. Turno perdido.")
-
-"""
-================== Función principal ====================
-"""
+# ========================== Función Main ===========================
 
 def main():
     """
-    Función principal del simulador de combate.
-    Crea personajes, controla el flujo del combate y determina al ganador.
-    """
-    # Creación de los personajes con sus atributos y habilidades iniciales
-    habilidades_jugador = [
-        [0, 25],  # Daño de 25 puntos
-        [1, 20],  # Curación de 20 puntos
-        [2, 10]   # Defensa incrementada en 10 puntos
-    ]
-    habilidades_enemigo = [
-        [0, 30],  # Daño de 30 puntos
-        [1, 15],  # Curación de 15 puntos
-        [2, 5]    # Defensa incrementada en 5 puntos
-    ]
-
-    print("Bienvenido al Simulador de Combate.\n")
-    nombre_jugador = input("Ingresa el nombre de tu personaje: ")
-    jugador = crear_personaje(nombre_jugador, 35, 15, 100, habilidades_jugador)
-    enemigo = crear_personaje("Enemigo", 30, 10, 100, habilidades_enemigo)
-
-    # Mostrar información inicial de los personajes
-    print("\n--- Información inicial de los personajes ---")
-    print(f"Personaje Jugador: {jugador}")
-    print(f"Personaje Enemigo: {enemigo}")
-
-    # Variable para llevar el control del turno
-    turno = 1
-
-    # Ciclo principal del combate
-    while jugador["vida"] > 0 and enemigo["vida"] > 0:
-        print(f"\n--- Turno {turno} ---")
-
-        # Turno del jugador
-        menu(jugador, enemigo)
-
-        # Verificar si el enemigo ha sido derrotado
-        if enemigo["vida"] <= 0:
-            print(f"{enemigo['nombre']} ha sido derrotado. ¡{jugador['nombre']} gana el combate!")
-            break
-
-        # Turno del enemigo (usa habilidades de manera aleatoria para simular IA básica)
-        print(f"\nTurno de {enemigo['nombre']}.")
-        accion_enemigo = random.choice([0, 1, 2])  # Selección aleatoria de ataque o habilidades
-        if accion_enemigo == 0:
-            atacar(enemigo, jugador)
-        else:
-            usar_habilidad(enemigo, jugador, accion_enemigo - 1)  # -1 porque los índices de habilidades inician en 0
-
-        # Verificar si el jugador ha sido derrotado
-        if jugador["vida"] <= 0:
-            print(f"{jugador['nombre']} ha sido derrotado. ¡{enemigo['nombre']} gana el combate!")
-            break
-
-        turno += 1
-
-    print("\n--- Fin del combate ---")
-
-"""
-================== Función de pruebas para el simulador ====================
-"""
-
-def pruebas_simulador():
-    """
-    Función de pruebas para el simulador de combate.
-    Realiza pruebas en las funciones principales y auxiliares para asegurar su correcto funcionamiento.
+    Función principal del simulador de peleas. Los usuarios ingresan los atributos de los personajes,
+    y el combate se realiza por turnos hasta que uno de los personajes se quede sin vida.
     """
 
-    print("\n==================== PRUEBAS DEL SIMULADOR ====================\n")
+    # Recibir nombres y atributos de los personajes
+    personaje_1 = input("Introduce el nombre del primer personaje: ")
+    personaje_1_vida = int(input(f"Introduce la vida de {personaje_1}: "))
+    personaje_1_fuerza = int(input(f"Introduce la fuerza de {personaje_1}: "))
+    personaje_1_defensa = int(input(f"Introduce la defensa de {personaje_1}: "))
 
-    # Crear personajes de prueba
-    print("Probando creación de personajes...\n")
-    habilidades_test_jugador = [
-        [0, 20],  # Habilidad 1: Daño de 20 puntos
-        [1, 15],  # Habilidad 2: Curación de 15 puntos
-        [2, 5]    # Habilidad 3: Defensa de 5 puntos
-    ]
+    personaje_2 = input("Introduce el nombre del segundo personaje: ")
+    personaje_2_vida = int(input(f"Introduce la vida de {personaje_2}: "))
+    personaje_2_fuerza = int(input(f"Introduce la fuerza de {personaje_2}: "))
+    personaje_2_defensa = int(input(f"Introduce la defensa de {personaje_2}: "))
 
-    habilidades_test_enemigo = [
-        [0, 25],  # Habilidad 1: Daño de 25 puntos
-        [1, 10],  # Habilidad 2: Curación de 10 puntos
-        [2, 7]    # Habilidad 3: Defensa de 7 puntos
-    ]
+    turno_actual = 1
 
-    # Crear dos personajes de prueba
-    jugador_test = crear_personaje("Jugador_Test", 30, 10, 100, habilidades_test_jugador)
-    enemigo_test = crear_personaje("Enemigo_Test", 35, 15, 100, habilidades_test_enemigo)
+    # Bucle del combate
+    while personaje_1_vida > 0 and personaje_2_vida > 0:
+        print(f"\n----- Turno {turno_actual} -----")
 
-    # Mostrar los personajes para ver que se crearon correctamente
-    print("Personaje Jugador:", jugador_test)
-    print("Personaje Enemigo:", enemigo_test, "\n")
+        # Mostrar estado actual
+        mostrar_estado(personaje_1, personaje_1_vida, personaje_1_fuerza, personaje_1_defensa)
+        mostrar_estado(personaje_2, personaje_2_vida, personaje_2_fuerza, personaje_2_defensa)
 
-    # Probar ataques
-    print("Probando ataques...\n")
-    dano_esperado = calcular_dano(jugador_test["fuerza"], enemigo_test["defensa"])
-    print(f"Daño esperado del Jugador_Test al Enemigo_Test: {dano_esperado}")
-    atacar(jugador_test, enemigo_test)
-   
+        # Turno de personaje 1
+        personaje_2_vida = turno_combate(personaje_1, personaje_2, personaje_1_fuerza, personaje_2_defensa, personaje_2_vida)
+
+        # Si el personaje 2 sigue vivo, turno del personaje 2
+        if personaje_2_vida > 0:
+            personaje_1_vida = turno_combate(personaje_2, personaje_1, personaje_2_fuerza, personaje_1_defensa, personaje_1_vida)
+
+        turno_actual += 1
+
+    # Determinar ganador
+    if personaje_1_vida > 0:
+        print(f"\n{personaje_1} ha ganado el combate en {turno_actual - 1} turnos.")
+    else:
+        print(f"\n{personaje_2} ha ganado el combate en {turno_actual - 1} turnos.")
+
+    # Guardar el estado final del combate en un archivo de texto
+    estado_combate = f"Combate entre {personaje_1} y {personaje_2}:\n"
+    estado_combate += f"{personaje_1} - Vida: {personaje_1_vida}, Fuerza: {personaje_1_fuerza}, Defensa: {personaje_1_defensa}\n"
+    estado_combate += f"{personaje_2} - Vida: {personaje_2_vida}, Fuerza: {personaje_2_fuerza}, Defensa: {personaje_2_defensa}\n"
+    estado_combate += f"Ganador: {personaje_1 if personaje_1_vida > 0 else personaje_2}\n"
+    estado_combate += f"Turnos jugados: {turno_actual - 1}"
+
+    guardar_estado_personajes(estado_combate)
+    print("\nEl estado del combate ha sido guardado en 'estado_personajes.txt'.")
+
+# ======================== Función de Pruebas =========================
+
+def pruebas():
+    """
+    Realiza pruebas de las funciones principales para asegurar que se comportan de manera esperada.
+    """
+
+    # Prueba de cálculo de daño
+    print("Prueba 1: Calcular daño")
+    dano_esperado = calcular_dano(10, 5)
+    print(f"Daño esperado (10 de fuerza vs 5 de defensa): {dano_esperado} (esperado: 5)")
+
+    # Prueba de aplicar daño
+    print("Prueba 2: Aplicar daño")
+    vida_restante = aplicar_dano(20, 5)
+    print(f"Vida restante (después de recibir 5 puntos de daño en 20 puntos de vida): {vida_restante} (esperado: 15)")
+
+    # Prueba de mostrar estado
+    print("Prueba 3: Mostrar estado del personaje")
+    mostrar_estado("Heroe", 30, 10, 8)
+
+    # Prueba de combate simple
+    print("Prueba 4: Simulación de un turno de combate")
+    vida_defensor = turno_combate("Heroe", "Villano", 15, 10, 20)
+    print(f"Vida restante del defensor Villano después del ataque: {vida_defensor} (esperado: 15)")
+
+# Ejecutar las pruebas
+pruebas()
+
+# Ejecutar el programa principal
 main()
